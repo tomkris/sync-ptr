@@ -8,5 +8,6 @@ keywords = ["pointer", "ffi", "sync", "send"]
 categories = ["data-structures"]
 description = "Sync & Send wrappers for raw pointer's"
 readme = "README.md"
+repository = "https://github.com/AlexanderSchuetz97/sync-ptr"
 
 [dependencies]
