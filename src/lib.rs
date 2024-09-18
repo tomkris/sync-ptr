@@ -5,6 +5,7 @@
 //! to obtain a wrapped version of your raw pointer that is Sync/Send.
 //!
 
+use std::fmt::{Formatter, Pointer};
 use std::ops::Deref;
 
 ///
@@ -26,6 +27,11 @@ impl<T> Clone for SyncMutPtr<T> {
 
 impl <T> Copy for SyncMutPtr<T> {
 
+}
+impl<T> Pointer for SyncMutPtr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Pointer::fmt(&self.0, f)
+    }
 }
 
 impl<T> SyncMutPtr<T> {
@@ -143,6 +149,12 @@ impl <T> Copy for SyncConstPtr<T> {
 
 }
 
+impl<T> Pointer for SyncConstPtr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Pointer::fmt(&self.0, f)
+    }
+}
+
 impl<T> SyncConstPtr<T> {
     ///
     /// Makes `ptr` Send+Sync
@@ -254,6 +266,12 @@ impl<T> Clone for SendMutPtr<T> {
 
 impl <T> Copy for SendMutPtr<T> {
 
+}
+
+impl<T> Pointer for SendMutPtr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Pointer::fmt(&self.0, f)
+    }
 }
 
 impl<T> SendMutPtr<T> {
@@ -377,6 +395,12 @@ impl<T> Clone for SendConstPtr<T> {
 
 impl <T> Copy for SendConstPtr<T> {
 
+}
+
+impl<T> Pointer for SendConstPtr<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Pointer::fmt(&self.0, f)
+    }
 }
 
 impl<T> SendConstPtr<T> {
