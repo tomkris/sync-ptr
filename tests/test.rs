@@ -55,8 +55,8 @@ pub fn test_cmp() {
 
     unsafe {
         let mut data = vec![0; 4096];
-        let n = data.as_mut_ptr().as_sync_mut();
-        let x = n.add(5).as_sync_mut();
+        let n = data.as_mut_ptr().as_sync_const();
+        let x = n.add(5).as_sync_const();
         assert!(x > n);
         assert!(n < x);
         assert_ne!(n, x);
