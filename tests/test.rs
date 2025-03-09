@@ -1,5 +1,5 @@
-extern crate std;
 extern crate alloc;
+extern crate std;
 
 use alloc::{format, vec};
 use core::ffi::c_void;
@@ -10,6 +10,59 @@ use sync_ptr::*;
 pub fn test_debug() {
     let n = unsafe { null_mut::<c_void>().as_sync_mut() };
     assert_eq!(format!("{:?}", n), "SyncMutPtr(0x0)");
+    let n = unsafe { null_mut::<c_void>().as_sync_const() };
+    assert_eq!(format!("{:?}", n), "SyncConstPtr(0x0)");
+    let n = unsafe { null_mut::<c_void>().as_send_const() };
+    assert_eq!(format!("{:?}", n), "SendConstPtr(0x0)");
+    let n = unsafe { null_mut::<c_void>().as_send_mut() };
+    assert_eq!(format!("{:?}", n), "SendMutPtr(0x0)");
+}
+
+#[test]
+pub fn test_cmp() {
+    unsafe {
+        let mut data = vec![0; 4096];
+        let n = data.as_mut_ptr().as_sync_mut();
+        let x = n.add(5).as_sync_mut();
+        assert!(x > n);
+        assert!(n < x);
+        assert_ne!(n, x);
+        assert_eq!(n, n);
+        assert_eq!(x, x);
+    }
+
+    unsafe {
+        let mut data = vec![0; 4096];
+        let n = data.as_mut_ptr().as_send_mut();
+        let x = n.add(5).as_send_mut();
+        assert!(x > n);
+        assert!(n < x);
+        assert_ne!(n, x);
+        assert_eq!(n, n);
+        assert_eq!(x, x);
+    }
+
+    unsafe {
+        let mut data = vec![0; 4096];
+        let n = data.as_mut_ptr().as_send_const();
+        let x = n.add(5).as_send_const();
+        assert!(x > n);
+        assert!(n < x);
+        assert_ne!(n, x);
+        assert_eq!(n, n);
+        assert_eq!(x, x);
+    }
+
+    unsafe {
+        let mut data = vec![0; 4096];
+        let n = data.as_mut_ptr().as_sync_mut();
+        let x = n.add(5).as_sync_mut();
+        assert!(x > n);
+        assert!(n < x);
+        assert_ne!(n, x);
+        assert_eq!(n, n);
+        assert_eq!(x, x);
+    }
 }
 
 #[test]
@@ -84,8 +137,8 @@ fn example() {
 
         assert_eq!(rcs.some_rust_data, 123u64)
     })
-        .join()
-        .unwrap();
+    .join()
+    .unwrap();
 }
 
 #[test]
@@ -93,18 +146,33 @@ fn test_fmt() {
     unsafe {
         let mut memory = vec![0u8; 12345];
         let handle: *mut c_void = memory.as_mut_ptr().add(12345).cast();
-        assert_eq!(format!("{:p}", handle.as_send_const()).as_str(), format!("{:p}", handle).as_str());
-        assert_eq!(format!("{:p}", handle.as_send_mut()).as_str(), format!("{:p}", handle).as_str());
-        assert_eq!(format!("{:p}", handle.as_sync_mut()).as_str(), format!("{:p}", handle).as_str());
-        assert_eq!(format!("{:p}", handle.as_sync_const()).as_str(), format!("{:p}", handle).as_str());
-        assert_ne!(format!("{:p}", handle.as_sync_const()).as_str(), format!("{:p}", memory.as_ptr()).as_str());
+        assert_eq!(
+            format!("{:p}", handle.as_send_const()).as_str(),
+            format!("{:p}", handle).as_str()
+        );
+        assert_eq!(
+            format!("{:p}", handle.as_send_mut()).as_str(),
+            format!("{:p}", handle).as_str()
+        );
+        assert_eq!(
+            format!("{:p}", handle.as_sync_mut()).as_str(),
+            format!("{:p}", handle).as_str()
+        );
+        assert_eq!(
+            format!("{:p}", handle.as_sync_const()).as_str(),
+            format!("{:p}", handle).as_str()
+        );
+        assert_ne!(
+            format!("{:p}", handle.as_sync_const()).as_str(),
+            format!("{:p}", memory.as_ptr()).as_str()
+        );
     }
 }
 
 #[cfg(target_has_atomic = "32")]
 #[test]
 fn test_mt() {
-    use core::sync::atomic::{AtomicU32};
+    use core::sync::atomic::AtomicU32;
     use core::sync::atomic::Ordering::SeqCst;
 
     unsafe {

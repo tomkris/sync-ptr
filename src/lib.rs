@@ -27,7 +27,7 @@ extern crate alloc;
 use core::fmt::{Formatter, Pointer};
 use core::ops::Deref;
 
-/// Implement common traits for type `SelfT` by forwarding implementation
+/// Implement common traits for type `SelfType` by forwarding implementation
 /// to underlying pointer.
 ///
 /// Rust compiler cannot correctly auto-derive them because it's adding unnecessary
@@ -44,53 +44,55 @@ use core::ops::Deref;
 /// To make implementation of traits in this library consistent with implementation of same
 /// traits on primitive pointers, we have to manually implement them.
 macro_rules! trait_impl {
-    ($SelfT:ident) => {
-        impl<T> Clone for $SelfT<T> {
+    ($SelfType:ident, $SelfName:literal) => {
+        impl<T> Clone for $SelfType<T> {
             #[inline(always)]
             fn clone(&self) -> Self {
                 *self
             }
         }
 
-        impl<T> Copy for $SelfT<T> {}
-        impl<T> Pointer for $SelfT<T> {
+        impl<T> Copy for $SelfType<T> {}
+        impl<T> Pointer for $SelfType<T> {
             fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
                 core::fmt::Pointer::fmt(&self.0, f)
             }
         }
 
-        impl<T> Eq for $SelfT<T> {}
-        impl<T> PartialEq for $SelfT<T> {
+        impl<T> Eq for $SelfType<T> {}
+        impl<T> PartialEq for $SelfType<T> {
             fn eq(&self, other: &Self) -> bool {
                 PartialEq::eq(&self.0, &other.0)
             }
         }
 
-        #[allow(clippy::non_canonical_partial_ord_impl)]
-        impl <T> PartialOrd for $SelfT<T> {
+        impl<T> PartialOrd for $SelfType<T> {
             fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
-                PartialOrd::partial_cmp(&self.0, &other.0)
+                Some(self.cmp(other))
             }
         }
 
-        impl<T> Ord for $SelfT<T> {
+        impl<T> Ord for $SelfType<T> {
             fn cmp(&self, other: &Self) -> core::cmp::Ordering {
                 Ord::cmp(&self.0, &other.0)
             }
         }
 
-        impl <T> core::fmt::Debug for $SelfT<T> {
+        impl<T> core::fmt::Debug for $SelfType<T> {
             fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-                core::fmt::Debug::fmt(&self.0, f)
+                use core::fmt::Write;
+                f.write_str($SelfName)?;
+                f.write_char('(')?;
+                core::fmt::Debug::fmt(&self.0, f)?;
+                f.write_char(')')
             }
         }
 
-        impl<T> core::hash::Hash for $SelfT<T> {
+        impl<T> core::hash::Hash for $SelfType<T> {
             fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
                 core::hash::Hash::hash(&self.0, state);
             }
         }
-
     };
 }
 
@@ -103,7 +105,7 @@ pub struct SyncMutPtr<T>(*mut T);
 unsafe impl<T> Sync for SyncMutPtr<T> {}
 unsafe impl<T> Send for SyncMutPtr<T> {}
 
-trait_impl!(SyncMutPtr);
+trait_impl!(SyncMutPtr, "SyncMutPtr");
 
 impl<T> SyncMutPtr<T> {
     ///
@@ -216,7 +218,7 @@ pub struct SyncConstPtr<T>(*const T);
 unsafe impl<T> Sync for SyncConstPtr<T> {}
 unsafe impl<T> Send for SyncConstPtr<T> {}
 
-trait_impl!(SyncConstPtr);
+trait_impl!(SyncConstPtr, "SyncConstPtr");
 
 impl<T> SyncConstPtr<T> {
     ///
@@ -327,7 +329,7 @@ pub struct SendMutPtr<T>(*mut T);
 
 unsafe impl<T> Send for SendMutPtr<T> {}
 
-trait_impl!(SendMutPtr);
+trait_impl!(SendMutPtr, "SendMutPtr");
 
 impl<T> SendMutPtr<T> {
     ///
@@ -448,7 +450,7 @@ pub struct SendConstPtr<T>(*const T);
 
 unsafe impl<T> Send for SendConstPtr<T> {}
 
-trait_impl!(SendConstPtr);
+trait_impl!(SendConstPtr, "SendConstPtr");
 
 impl<T> SendConstPtr<T> {
     ///
