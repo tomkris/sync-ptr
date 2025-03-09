@@ -7,6 +7,12 @@ use core::ptr::null_mut;
 use sync_ptr::*;
 
 #[test]
+pub fn test_debug() {
+    let n = unsafe { null_mut::<c_void>().as_sync_mut() };
+    assert_eq!(format!("{:?}", n), "SyncMutPtr(0x0)");
+}
+
+#[test]
 fn test() {
     unsafe {
         assert_eq!(size_of::<SyncConstPtr<c_void>>(), size_of::<*mut c_void>());
